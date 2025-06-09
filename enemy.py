@@ -5,13 +5,13 @@ import random
 from settings import *
 
 class Enemy:
-    def __init__(self, wave):
+    def __init__(self, x, y, wave):  # Добавьте x и y как параметры
+        self.x = x
+        self.y = y
         self.size = 15 + wave
         self.speed = 1.0 + wave * 0.1
         self.max_health = 50 + wave * 10
         self.health = self.max_health
-        self.x = random.randint(100, WIDTH-100)
-        self.y = random.randint(100, HEIGHT-100)
         self.type = random.choice(['normal', 'fast', 'tank'])[:wave//3]
 
         # Модификаторы для разных типов
@@ -21,8 +21,6 @@ class Enemy:
         elif self.type == 'tank':
             self.speed *= 0.7
             self.max_health *= 2
-            
-        self.health = self.max_health
 
     def update(self, player, bullets):
         angle = math.atan2(player.y - self.y, player.x - self.x)
@@ -36,10 +34,17 @@ class Enemy:
                 self.x += math.cos(angle_bullet) * 5
                 self.y += math.sin(angle_bullet) * 5
 
-    def draw(self, screen):
+
+    def draw(self, screen, camera):  # Добавьте параметр camera
         color = COLORS['red']
         if self.type == 'fast':
-            color = (255, 165, 0)  # оранжевый
+            color = (255, 165, 0)
         elif self.type == 'tank':
-            color = (139, 69, 19)  # коричневый
-        pygame.draw.circle(screen, color, (int(self.x), int(self.y)), self.size)
+            color = (139, 69, 19)
+        # Корректировка позиции с учетом камеры
+        screen_x = self.x - camera.x
+        screen_y = self.y - camera.y
+        pygame.draw.circle(screen, color, (int(screen_x), int(screen_y)), self.size)
+    
+    def take_damage(self, amount):
+        self.health = max(self.health - amount, 0)
